@@ -1,0 +1,3 @@
+node_modules/
+mongo-pass
+ecosystem.config.cjs
