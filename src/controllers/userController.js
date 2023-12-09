@@ -6,6 +6,7 @@ async function signup_post (req, res) {
     let type = 0
     const { name, email, phone, gender, college, city, dob, password, invite } = req.body
     if (invite == 65535) { type = "admin" }
+    else { type = "user" }
 
     try {
         const newUser = await User.create({ name, email, phone, gender, college, city, password, dob, type });
@@ -41,17 +42,23 @@ async function signup_post (req, res) {
 }
 
 async function verify (req, res) {
-    const id = req.body.id
+    const { id, adminId } = req.body
 
     try {
-        let user = await User.findById(id);
-        if (user) { 
-            res.status(200).json("User verified!");
-            console.info(`User verified: ${ user }`); 
+        const admin = await User.findById(adminId);
+
+        if (admin && admin.type == "admin") {
+            const user = await User.findById(id);
+            if (user) {
+                res.status(200).json({ "message": "User verified", "user": user });
+                console.info(`User verified: ${ user }`);
+            }
+            else { res.status(404).json({ "errors": { "message": "User not found" } }); }
         }
-        else { throw Error }
+        else { res.status(400).json({ "errors": { "message": "Invalid Admin ID" } }); }
     } catch (err) {
-        res.status(400).json( "User not found" );
+        console.error(err)
+        res.status(500).json({ "errors": { "message": "Internal Server Error" } });
     }
 }
 
